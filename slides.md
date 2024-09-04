@@ -1,6 +1,7 @@
 ---
 theme: seriph
 background: https://richka.co/wp-content/uploads/2020/09/anders-jilden-uwbajDCODj4-unsplash.jpg
+layout: center
 ---
 
 <!-- 背景画像とテキストアニメーション -->
@@ -11,8 +12,7 @@ background: https://richka.co/wp-content/uploads/2020/09/anders-jilden-uwbajDCOD
   :enter="{ opacity: 1, y: 0, transition: { delay: 500 } }"
   class="text-center text-5xl font-bold"
 >
-  オブジェクト指向でなぜつくるのか<br>
-  読んだよ
+  test...　
 </div>
 
 <style>
@@ -25,353 +25,266 @@ section {
 
 ---
 
-<div class="text-center text-5xl font-bold relative">
-  <img src="https://a.media-amazon.com/images/I/81CZ-UvQ6CS._SL1500_.jpg" class="h-100 " />
-</div>
----
-
-# 大体の内容
-
-1. オブジェクト指向の概要
-2. オブジェクト指向に至るまでの歴史
-3. 具体的な技術
-4. 整理術としてのオブジェクト指向
-5. 応用
-   - UML
-   - モデリング
-   - 設計
-   - アジャイル開発
-6. 関数型プログラミング
+layout: center
 
 ---
 
-# おすすめポイント
-
-- 優しい
-  - オブジェクト指向って聞いたことあるなら読んでみて
-- 章の順番がわかりやすい
-- サンプルコードがわかりやすい（リーダブルコードやLaravelの本より）
+# Honoのテスト
 
 ---
 
-# 自分に当てはめて
+# 使うもの
 
-- 今までオブジェクト指向あまり意識してなかったけど...
-
-  - supabase（ライブラリ）でインスタンス作って使い回しまくってた
-
-- メモリ意識したことある？
-
-  - 自分はなかった
-  - メモリの使い方について初めて学んだ
-
-- 実践とかは自分でするしかない
+- Hono(割愛)
+- Vitest
+- testing-library系
+- @vitest/coverage-v8
 
 ---
 
-# よくわからなかったところ
-
-- COBOLのコンパイラがCOBOL？
+# インストールよろしく
 
 ---
 
-# 内容があまりそうなので
-
-今週詰まってて解決したアホなところ紹介
-
-- signout（supabaseのサンプルコード、フロントからsupabaseのインスタンスにアクセス）
-
-  - signoutをbff,バックエンドを介してsupabaseのインスタンスにアクセスにする
-
-- 処理（signout → supabase）
-
-  - DBの処理
-  - クッキーの削除
-
-- できないこと
-  - これをbff,バックエンド介すとcookieの削除ができない
+# その他設定
 
 ---
 
-# つまづいたところ
+# package.json
 
-- 実装時の状況
-  - signin,signupも同じようにしてた
+```json
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+```
 
-```ts {2}
+---
+
+# vitest.config.ts
+
+```ts
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: "./setupTests.ts",
+    coverage: {
+      enabled: true,
+    },
+  },
+});
+```
+
+---
+
+# setupTests.ts
+
+## 今回使わないけどここに設定書く
+
+---
+
+# まずはHono関係なくテスト
+
+---
+
+# テストしたいコード
+
+```ts
+import { Hono } from "hono";
+
+const app = new Hono().get("/", (c) => {
+  return c.text("Hello World");
+});
+
+export default app;
+```
+
+---
+
+# テストコード
+
+```ts
+import app from "./index";
+import { expect, describe, it } from "vitest";
+
+describe("Testing My App", () => {
+  it("Should return 200 response", async () => {
+    // ここ注意"/"
+    const req = new Request("http://localhost:8787/");
+    const res = await app.fetch(req);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Hello World");
+  });
+});
+```
+
+---
+
+# npm run test
+
+---
+
+# 結果
+
+```
+
+ RERUN  src/sample/test1/index.ts x2
+
+ ✓ src/sample/test1/index.test.ts (1)
+   ✓ Testing My App (1)
+     ✓ Should return 200 response
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  00:48:00
+   Duration  36ms
+
+ % Coverage report from v8
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+----------|---------|----------|---------|---------|-------------------
+All files |     100 |      100 |     100 |     100 |
+ index.ts |     100 |      100 |     100 |     100 |
+----------|---------|----------|---------|---------|-------------------
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+---
+
+# カバレッジでた
+
+---
+
+# 次はHonoを使ってみる
+
+---
+
+# テストしたいコード
+
+同じ
+
+```ts
+import { Hono } from "hono";
+
+const app = new Hono().get("/", (c) => {
+  return c.text("Hello World");
+});
+
+export default app;
+```
+
+---
+
+# テストコード
+
+```ts {6}
+import app from "./index";
+import { expect, describe, it } from "vitest";
+
+describe("Testing My App", () => {
+  it("Should return 200 response", async () => {
+    const res = await app.request("/");
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Hello World");
+  });
+});
+```
+
+---
+
+# 変更点
+
+```ts
+const req = new Request("http://localhost:8787/");
+const res = await app.fetch(req);
+```
+
+↓
+
+```ts
+const res = await app.request("/");
+```
+
+---
+
+# 結果は割愛
+
+---
+
+# bodyあり、POST
+
+---
+
+# テストしたいコード
+
+```ts
 const app = new Hono().post("/", async (c) => {
-  const cookie = getCookie(c);
-
-  const response = await clientCore.api.core.auth.signout.$post(
-    {},
-    {
-      headers: {
-        Cookie: cookie,
-      },
-    }
-  );
+  const data = await c.req.parseBody<{ message: string }>();
+  return c.text(`Message is ${data.message}`);
+});
 ```
 
 ---
 
-# 正解のコード
+# テストコード
 
-```ts {2,3}
-const app = new Hono().post("/", async (c) => {
-  // const cookie = getCookie(c);
-  const cookie = c.req.raw.headers.get("Cookie");
-
-  const response = await clientCore.api.core.auth.signout.$post(
-    {},
-    {
-      headers: {
-        Cookie: cookie,
-      },
-    }
-  );
-```
-
-- `getCookie`の中身オブジェクトでした。
-- ずっと送れていると思い込んでいた。
-
----
-
-# どこで気がついたか
-
-- 散々わからず一度撤退
-- getUserもbffとcore噛ませるぞ！
-- 同じやり方でそもそもUser取得できない
-  - なんで？
-
----
-
-- signinでcookieいらないのにうまくいっているってことはCookie渡せているという謎思考
-  <br><br><br><br><br><br><br>
-
-# 来週もっとちゃんとした発表します
-
-<p v-click style="font-size: 200px;opacity:0.1">多分</p>
-
----
-
-# 使い方
-
-## インストール
-
-```bash
-npm init slidev
-```
-
-## アクセス
-
-http://localhost:3030/1
-
-<div class="p-5 bg-teal-600 text-white rounded-lg shadow-md mt-10">
-  スライドの使い方は簡単です！
-</div>
----
-
-# 使い方その2
-
-- slides.mdに記述
-- 別ファイルをインポートしてもOK（ページごとにファイル分けれる）
-  <img src="/screenshot1.png" class=" h-90 rounded shadow" />
-
----
-
-# 使い方その3
-
-`---`でページ間を区切り、あとはマークダウン
-<img src="/screenshot2.png" class=" h-90 rounded shadow" />
-
----
-
-# コードについて
-
-コードブロックを直接使用してハイライト表示する
-
-```ts {2,3}
-function add(a: Ref<number> | number, b: Ref<number> | number) {
-  return computed(() => unref(a) + unref(b));
-}
-```
-
-````
-```ts {2,3}
-function add(a: Ref<number> | number, b: Ref<number> | number) {
-  return computed(() => unref(a) + unref(b));
-}
-````
-
-編集したい場合は、monacoを使う
-
-```ts {monaco}
-console.log("HelloWorld");
-```
-
-<div v-click>
-  <div class="text-lg text-red-600 mt-5">
-    実際のコードをハイライトして表示できます！
-  </div>
-</div>
-
----
-
-# 装飾
-
-Windi CSSとVueコンポーネントを直接使用して、スライドをスタイリングし、リッチにすることができます。
-
-<div class="p-3">
-  <Tweet id="20" />
-</div>
-
-```
-<div class="p-3">
-  <Tweet id="20" />
-</div>
+```ts
+it("Should return 200 response", async () => {
+  const formData = new FormData();
+  formData.append("message", "Hi");
+  const res = await app.request("/", {
+    method: "POST",
+    body: formData,
+  });
+  expect(res.status).toBe(200);
+  expect(await res.text()).toBe("Message is Hi");
+});
 ```
 
 ---
 
-# 装飾2
-
-> Hello `world`
-
-```
-<style>
-blockquote {
-  code {
-    @apply text-teal-500 dark:text-teal-400;
-  }
-}
-</style>
-```
-
-<style>
-blockquote {
-  code {
-    @apply text-teal-500 dark:text-teal-400;
-  }
-}
-</style>
+# ヘルパー関数
 
 ---
 
-# 画像
+# 型つくよ
 
-リモート
-
-`![リモートの画像](https://sli.dev/favicon.png)`
-![リモートの画像](https://sli.dev/favicon.png)
-
----
-
-# 画像
-
-ローカル
-
-`![ローカルの画像](/zod.svg)`
-![ローカルの画像](/zod.svg)
-
----
-
-# 図形
-
-```mermaid {theme: 'neutral', scale: 0.8}
-graph TD
-B[Text] --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]
-```
-
-```
-graph TD
-B[Text] --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]
+```ts
+const res = await testClient(app).foo.bar.$get();
 ```
 
 ---
 
-# アニメーション
+# 比較
 
-<!-- コンポーネントの使い方: "次へ"を押すまで、ここから下の内容は表示されません -->
-<v-click>
+  <img src="/20240905/no_type.png" class="" />
+  <img src="/20240905/type.png" class="" />
 
-Hello World
+---
 
-</v-click>
+# ヘッダー
 
-<!-- ディレクティブの使い方: 2回目の"次へ"を押すまで、ここから下の内容は表示されません -->
-<div v-click class="text-xl p-2">
-
-Hey!
-
-</div>
-```
-<!-- コンポーネントの使い方: "次へ"を押すまで、ここから下の内容は表示されません -->
-<v-click>
-Hello World
-</v-click>
-<!-- ディレクティブの使い方: 2回目の"次へ"を押すまで、ここから下の内容は表示されません -->
-<div v-click class="text-xl p-2">
-Hey!
-</div>
+```ts
+const res = await app.request("/posts", {
+  method: "POST",
+  body: JSON.stringify({ message: "hello hono" }),
+  headers: new Headers({ "Content-Type": "application/json" }),
+});
 ```
 
 ---
 
-# アニメーション2
+# ここ見てね
 
-<div
-  v-motion
-  :initial="{ x: -80 }"
-  :enter="{ x: 0 }">
-  Slidev
-</div>
-
-```
-<div
-  v-motion
-  :initial="{ x: -80 }"
-  :enter="{ x: 0 }">
-  Slidev
-</div>
-```
+- https://hono.dev/docs/guides/testing
+- https://zenn.dev/yusukebe/articles/9a6335ed793c43
 
 ---
-
-#プレゼンターモード
-
-http://localhost:3030/presenter
-
----
-
-# デプロイ方法
-
-- Netlify
-- Vercel
-- Github Pages
-
----
-
-# Vercel
-
-0. 設定（vercel.jsonに記述、インストール時に同時作成済み）
-1. プロジェクト作成
-2. リポジトリ連携
-3. 完了
-
----
-
-<div style="
-position:absolute;
-left:50%;
-top:50%;
-z-index:100;
-font-size:100px
-">
-
-Fin.
-
-</div>
